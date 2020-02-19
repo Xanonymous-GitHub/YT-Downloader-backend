@@ -19,7 +19,7 @@ func HttpHexNumberToSimpleText(path string) (result []byte) {
 	var enc = simplifiedchinese.GBK
 	file, err := os.Open(path)
 	defer file.Close()
-	errorHandler.Handler("", err)
+	errorHandler.Handler("1", err)
 	r := transform.NewReader(file, enc.NewDecoder())
 	buf := make([]byte, 1)
 	tmpBuf := make([]byte, 2)
@@ -60,9 +60,9 @@ func DecodeUTF16(b []byte) (result []byte) {
 			scf.u = true
 			continue
 		}
-		if b[i]-'0' < 10 && b[i+1]-'0' < 10 && b[i+2]-'0' < 10 && b[i+3]-'0' < 10 && scf.u {
+		if i+3 < bLength && b[i]-'0' < 10 && b[i+1]-'0' < 10 && b[i+2]-'0' < 10 && b[i+3]-'0' < 10 && scf.u {
 			n, err := strconv.ParseInt(string(b[i:i+4]), 16, 32)
-			errorHandler.Handler("", err)
+			errorHandler.Handler("2", err)
 			result = append(result, byte(n))
 			scf = specialCharFinder{false, false}
 			i += 3
