@@ -6,6 +6,7 @@ import (
 )
 
 func main() {
-	result := converter.HttpHexNumberToSimpleText("/Users/xanonymous/Downloads/yt_info")
-	fmt.Printf("%s", result)
+	preResult := converter.HttpHexNumberToSimpleText("/Users/xanonymous/Downloads/yt_info")
+	result := converter.DecodeUTF16(preResult)
+	fmt.Printf("%s", string(result))
 }
