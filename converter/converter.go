@@ -19,12 +19,16 @@ func HttpHexNumberToSimpleText(path string) (result []byte) {
 	var enc = simplifiedchinese.GBK
 	file, err := os.Open(path)
 	defer file.Close()
-	errorHandler.Handler("1", err)
+	errorHandler.Handler("converter.HttpHexNumberToSimpleText => file, err := os.Open(path)", err)
 	r := transform.NewReader(file, enc.NewDecoder())
 	buf := make([]byte, 1)
 	tmpBuf := make([]byte, 2)
 	for {
 		n, err := r.Read(buf)
+		if err == io.EOF {
+			break
+		}
+		errorHandler.Handler("converter.HttpHexNumberToSimpleText => n, err := r.Read(buf)", err)
 		if n > 0 {
 			words := string(buf[:n])
 			if words == "%" {
@@ -32,18 +36,14 @@ func HttpHexNumberToSimpleText(path string) (result []byte) {
 				if err == io.EOF {
 					break
 				}
-				errorHandler.Handler("converter error", err)
+				errorHandler.Handler("converter.HttpHexNumberToSimpleText => _, err := r.Read(tmpBuf)", err)
 				decoded, err := hex.DecodeString(string(tmpBuf[:]))
-				errorHandler.Handler("decode error", err)
+				errorHandler.Handler("converter.HttpHexNumberToSimpleText => decoded, err := hex.DecodeString(string(tmpBuf[:]))", err)
 				result = append(result, decoded...)
 			} else {
 				result = append(result, buf[:n]...)
 			}
 		}
-		if err == io.EOF {
-			break
-		}
-		errorHandler.Handler("converter error", err)
 	}
 	return
 }
@@ -62,7 +62,7 @@ func DecodeUTF16(b []byte) (result []byte) {
 		}
 		if i+3 < bLength && b[i]-'0' < 10 && b[i+1]-'0' < 10 && b[i+2]-'0' < 10 && b[i+3]-'0' < 10 && scf.u {
 			n, err := strconv.ParseInt(string(b[i:i+4]), 16, 32)
-			errorHandler.Handler("2", err)
+			errorHandler.Handler("converter.DecodeUTF16 => n, err := strconv.ParseInt(string(b[i:i+4]), 16, 32)", err)
 			result = append(result, byte(n))
 			scf = specialCharFinder{false, false}
 			i += 3
