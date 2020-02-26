@@ -15,15 +15,10 @@ func startServices(id string) {
 	}
 	queries := map[string]string{"video_id": id}
 	resp := api.Request(defaultURL, queries, "GET", header)
-	prePath := api.WriteToFile(resp)
-	prePreResult := converter.HttpHexNumberToSimpleText(prePath)
-	api.Recycle(prePath)
-	path := api.WriteToFile(prePreResult)
-	preResult := converter.HttpHexNumberToSimpleText(path)
-	result := converter.DecodeUTF16(preResult)
-	//fmt.Printf("%s", string(result))
+	result := converter.HttpHexNumberToSimpleText(resp)
+	result = converter.HttpHexNumberToSimpleText(result)
+	result = converter.DecodeUTF16(result)
 	log.Println(converter.MakeUrlList(string(result)))
-	api.Recycle(path)
 }
 
 func main() {

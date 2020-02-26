@@ -3,54 +3,45 @@ package converter
 import (
 	"encoding/hex"
 	"github.com/Xanonymous-GitHub/YT-Downloader-backend/errorHandler"
-	"golang.org/x/text/encoding/simplifiedchinese"
-	"golang.org/x/text/transform"
-	"io"
-	"os"
 	"strconv"
 )
 
 type specialCharFinder struct {
-	slash bool
-	u     bool
+	slash   bool
+	u       bool
+	percent int
 }
 
-func HttpHexNumberToSimpleText(path string) (result []byte) {
-	var enc = simplifiedchinese.GBK
-	file, err := os.Open(path)
-	defer file.Close()
-	errorHandler.Handler("converter.HttpHexNumberToSimpleText => file, err := os.Open(path)", err)
-	r := transform.NewReader(file, enc.NewDecoder())
-	buf := make([]byte, 1)
-	tmpBuf := make([]byte, 2)
-	for {
-		n, err := r.Read(buf)
-		if err == io.EOF {
-			break
+func HttpHexNumberToSimpleText(b []byte) (result []byte) {
+	scf := specialCharFinder{false, false, 0}
+	tmpStr := make([]byte, 2)
+	for _, data := range b {
+		if data == '%' {
+			scf.percent++
+			continue
 		}
-		errorHandler.Handler("converter.HttpHexNumberToSimpleText => n, err := r.Read(buf)", err)
-		if n > 0 {
-			words := string(buf[:n])
-			if words == "%" {
-				_, err := r.Read(tmpBuf)
-				if err == io.EOF {
-					break
-				}
-				errorHandler.Handler("converter.HttpHexNumberToSimpleText => _, err := r.Read(tmpBuf)", err)
-				decoded, err := hex.DecodeString(string(tmpBuf[:]))
-				errorHandler.Handler("converter.HttpHexNumberToSimpleText => decoded, err := hex.DecodeString(string(tmpBuf[:]))", err)
+		if data != '%' && scf.percent != 0 {
+			tmpStr = append(tmpStr, data)
+			scf.percent++
+			if scf.percent == 3 {
+				decoded, err := hex.DecodeString(string(tmpStr))
+				errorHandler.Handler("converter.HttpHexNumberToSimpleText => decoded, err := hex.DecodeString(string(tmpStr))", err)
 				result = append(result, decoded...)
-			} else {
-				result = append(result, buf[:n]...)
+				scf.percent = 0
+				tmpStr = []byte{}
 			}
+			continue
 		}
+		scf.percent = 0
+		tmpStr = []byte{}
+		result = append(result, data)
 	}
 	return
 }
 
 func DecodeUTF16(b []byte) (result []byte) {
 	bLength := len(b)
-	scf := specialCharFinder{false, false}
+	scf := specialCharFinder{false, false, 0}
 	for i := 0; i < bLength; i++ {
 		if b[i] == '\\' {
 			scf.slash = true
@@ -64,7 +55,7 @@ func DecodeUTF16(b []byte) (result []byte) {
 			n, err := strconv.ParseInt(string(b[i:i+4]), 16, 32)
 			errorHandler.Handler("converter.DecodeUTF16 => n, err := strconv.ParseInt(string(b[i:i+4]), 16, 32)", err)
 			result = append(result, byte(n))
-			scf = specialCharFinder{false, false}
+			scf = specialCharFinder{false, false, 0}
 			i += 3
 			continue
 		}
