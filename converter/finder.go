@@ -2,29 +2,27 @@ package converter
 
 import "strings"
 
-func MakeUrlList(s string) (result []string) {
-	for getPosition(s) != -1 {
-		r, l := wholeUrl(getPosition(s), s)
-		result = append(result, r)
-		s = l
+func MakeUrlList(videoInfo string) (urlList []string) {
+	for getPosition(videoInfo) != -1 {
+		videoUrl, changedVideoInfo := wholeUrl(getPosition(videoInfo), videoInfo)
+		urlList = append(urlList, videoUrl)
+		videoInfo = changedVideoInfo
 	}
 	return
 }
 
-func getPosition(s string) int {
-	return strings.Index(s, "videoplayback")
+func getPosition(videoInfo string) int {
+	return strings.Index(videoInfo, "videoplayback")
 }
 
-func wholeUrl(p int, s string) (result string, l string) {
-	result += string(s[p])
-	q := p - 1
-	for ; s[q] != '"'; q -= 1 {
+func wholeUrl(position int, videoInfo string) (videoUrl string, changedVideoInfo string) {
+	videoUrl += string(videoInfo[position])
+	left, right := position, position
+	for ; videoInfo[left] != '"'; left -= 1 {
 	}
-	result = s[q+1:p] + result
-	q = p + 1
-	for ; s[q] != '"'; q++ {
+	for ; videoInfo[right] != '"'; right += 1 {
 	}
-	result += s[p+1 : q]
-	l = s[q+1:]
+	videoUrl = videoInfo[left+1 : right]
+	changedVideoInfo = videoInfo[right+1:]
 	return
 }

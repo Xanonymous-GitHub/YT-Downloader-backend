@@ -16,11 +16,11 @@ func Request(url string, queryId map[string]string, method string, header Header
 	errorHandler.Handler("api.Request => req, err := http.NewRequest(method, url, nil)", err)
 	req.Header.Set("Host", header.Host)
 	req.Header.Set("User-Agent", header.UserAgent)
-	q := req.URL.Query()
-	for k, v := range queryId {
-		q.Add(k, v)
+	query := req.URL.Query()
+	for key, value := range queryId {
+		query.Add(key, value)
 	}
-	req.URL.RawQuery = q.Encode()
+	req.URL.RawQuery = query.Encode()
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if resp.StatusCode != 200 {
