@@ -15,10 +15,20 @@ func startServices(id string) {
 	}
 	queries := map[string]string{"video_id": id}
 	resp := api.Request(defaultURL, queries, "GET", header)
+	if resp == nil {
+		log.Fatalln("Internet connection error.")
+	}
 	result := converter.HttpHexNumberToSimpleText(resp)
 	result = converter.HttpHexNumberToSimpleText(result)
 	result = converter.DecodeUTF16(result)
-	log.Println(converter.MakeUrlList(string(result)))
+	urls, props, verified := converter.MakeLists(string(result), "videoplayback")
+	if !verified {
+		log.Fatalln("We can't solve this video.")
+		return
+	}
+	log.Println(urls)
+	log.Println(props)
+	//log.Println(string(result))
 }
 
 func main() {

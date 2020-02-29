@@ -23,11 +23,14 @@ func Request(url string, queryId map[string]string, method string, header Header
 	req.URL.RawQuery = query.Encode()
 	client := &http.Client{}
 	resp, err := client.Do(req)
+	if resp == nil {
+		return nil
+	}
+	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		panic("http resp error!\n")
 	}
 	errorHandler.Handler("api.Request => resp, err := client.Do(req)", err)
-	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	errorHandler.Handler("api.Request => body, err := ioutil.ReadAll(resp.Body)", err)
 	return body
