@@ -94,28 +94,10 @@ func properties(position int, videoInfo string) (prop string, changedVideoInfo s
 			v.headPos = i + 1
 		}
 	}
-	for {
-		pos := getPosition(prop, "tr\"ue")
-		if pos == -1 {
-			break
-		}
-		prop = strangeQuotation(pos, prop)
-	}
-	for {
-		pos := getPosition(prop, "\"\":")
-		if pos == -1 {
-			break
-		}
-		prop = strangeQuotationTwo(pos, prop)
-	}
+	prop = finalFix("tr\"ue", "true", prop)
+	prop = finalFix("\"\":", "\":", prop)
 	for i := 0; i < 32; i++ {
-		for {
-			pos := getPosition(prop, string(uint8(i)))
-			if pos == -1 {
-				break
-			}
-			prop = strangeQuotationThree(pos, prop)
-		}
+		prop = finalFix(string(uint8(i)), "", prop)
 	}
 	changedVideoInfo = videoInfo[position+1:]
 	return
@@ -130,17 +112,18 @@ func findWords(findList []string, target string) bool {
 	return false
 }
 
-func strangeQuotation(pos int, data string) (result string) {
-	result = data[:pos] + "true" + data[pos+5:]
+func strangeQuotation(pos int, data string, key string, move int) (result string) {
+	result = data[:pos] + key + data[pos+move:]
 	return
 }
 
-func strangeQuotationTwo(pos int, data string) (result string) {
-	result = data[:pos] + "\":" + data[pos+3:]
-	return
-}
-
-func strangeQuotationThree(pos int, data string) (result string) {
-	result = data[:pos] + "" + data[pos+1:]
-	return
+func finalFix(searchBy, key, data string) string {
+	for {
+		pos := getPosition(data, searchBy)
+		if pos == -1 {
+			break
+		}
+		data = strangeQuotation(pos, data, key, len(searchBy))
+	}
+	return data
 }
