@@ -2,7 +2,6 @@ package converter
 
 import (
 	"encoding/json"
-	"github.com/Xanonymous-GitHub/YT-Downloader-backend/errorHandler"
 	"log"
 	"strings"
 )
@@ -24,7 +23,7 @@ func MakeLists(videoInfo string, keyWord string) (urlList []string, propList []m
 		if err != nil {
 			log.Println(prop)
 		}
-		errorHandler.Handler("converter.MakeLists => err := json.Unmarshal([]byte(prop), videoProps)", err)
+		//errorHandler.Handler("converter.MakeLists => err := json.Unmarshal([]byte(prop), videoProps)", err)
 		propList = append(propList, videoProps)
 		videoInfo = changedVideoInfo
 	}
@@ -70,6 +69,30 @@ func properties(position int, videoInfo string) (prop string, changedVideoInfo s
 		}
 	}
 	prop = "{" + videoInfo[head:position]
+	v := struct {
+		active       bool
+		hasNotNumber bool
+		headPos      int
+	}{false, false, 0}
+	for i, k := range prop {
+		if v.active {
+			if k == ',' {
+				if v.hasNotNumber {
+					prop = prop[:v.headPos] + "\"" + prop[v.headPos:i] + "\"" + prop[i:]
+				}
+				v.active = false
+				v.hasNotNumber = false
+			} else if findWords([]string{"\"", "{", "}", "[", "]"}, string(k)) {
+				v.active = false
+				v.hasNotNumber = false
+			} else if !findWords([]string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"}, string(k)) {
+				v.hasNotNumber = true
+			}
+		} else if k == ':' {
+			v.active = true
+			v.headPos = i + 1
+		}
+	}
 	changedVideoInfo = videoInfo[position+1:]
 	return
 }
