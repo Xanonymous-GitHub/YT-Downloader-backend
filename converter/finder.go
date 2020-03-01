@@ -2,6 +2,7 @@ package converter
 
 import (
 	"encoding/json"
+	"github.com/Xanonymous-GitHub/YT-Downloader-backend/errorHandler"
 	"log"
 	"strings"
 )
@@ -23,7 +24,7 @@ func MakeLists(videoInfo string, keyWord string) (urlList []string, propList []m
 		if err != nil {
 			log.Println(prop)
 		}
-		//errorHandler.Handler("converter.MakeLists => err := json.Unmarshal([]byte(prop), videoProps)", err)
+		errorHandler.Handler("converter.MakeLists => err := json.Unmarshal([]byte(prop), videoProps)", err)
 		propList = append(propList, videoProps)
 		videoInfo = changedVideoInfo
 	}
@@ -85,12 +86,35 @@ func properties(position int, videoInfo string) (prop string, changedVideoInfo s
 			} else if findWords([]string{"\"", "{", "}", "[", "]"}, string(k)) {
 				v.active = false
 				v.hasNotNumber = false
-			} else if !findWords([]string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"}, string(k)) {
+			} else if (i == v.headPos && k == '0') || !findWords([]string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"}, string(k)) {
 				v.hasNotNumber = true
 			}
 		} else if k == ':' {
 			v.active = true
 			v.headPos = i + 1
+		}
+	}
+	for {
+		pos := getPosition(prop, "tr\"ue")
+		if pos == -1 {
+			break
+		}
+		prop = strangeQuotation(pos, prop)
+	}
+	for {
+		pos := getPosition(prop, "\"\":")
+		if pos == -1 {
+			break
+		}
+		prop = strangeQuotationTwo(pos, prop)
+	}
+	for i := 0; i < 32; i++ {
+		for {
+			pos := getPosition(prop, string(uint8(i)))
+			if pos == -1 {
+				break
+			}
+			prop = strangeQuotationThree(pos, prop)
 		}
 	}
 	changedVideoInfo = videoInfo[position+1:]
@@ -104,4 +128,19 @@ func findWords(findList []string, target string) bool {
 		}
 	}
 	return false
+}
+
+func strangeQuotation(pos int, data string) (result string) {
+	result = data[:pos] + "true" + data[pos+5:]
+	return
+}
+
+func strangeQuotationTwo(pos int, data string) (result string) {
+	result = data[:pos] + "\":" + data[pos+3:]
+	return
+}
+
+func strangeQuotationThree(pos int, data string) (result string) {
+	result = data[:pos] + "" + data[pos+1:]
+	return
 }
